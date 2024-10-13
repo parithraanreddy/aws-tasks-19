@@ -1,0 +1,17 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Main Template for Nested Stacks
+
+Resources:
+  VpcStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://my-cloudformation-templates-19.s3.ap-south-1.amazonaws.com/vpc-template.yaml
+      TimeoutInMinutes: 10
+
+  Ec2InstanceStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL: https://my-cloudformation-templates-19.s3.ap-south-1.amazonaws.com/ec2-instance-template.yaml
+      Parameters:
+        VpcId: !GetAtt VpcStack.Outputs.VpcId
+      TimeoutInMinutes: 10

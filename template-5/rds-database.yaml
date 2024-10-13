@@ -1,0 +1,88 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create an Amazon RDS MySQL instance
+
+Parameters:
+  DBName:
+    Description: The name of the database to create
+    Type: String
+    Default: mydatabase
+
+  DBUsername:
+    Description: The database admin account username
+    Type: String
+    MinLength: 1
+    MaxLength: 16
+    Default: admin
+
+  DBPassword:
+    Description: The database admin account password
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    MaxLength: 41
+
+  VPCID:
+    Description: VPC ID where the RDS instance will be created
+    Type: AWS::EC2::VPC::Id
+
+  SubnetGroupName:
+    Description: Name of the DB Subnet Group
+    Type: String
+    Default: MyDBSubnetGroup
+
+  DBInstanceClass:
+    Description: The database instance class
+    Type: String
+    Default: db.t3.micro
+
+Resources:
+  MyDBSubnetGroup:
+    Type: AWS::RDS::DBSubnetGroup
+    Properties:
+      DBSubnetGroupDescription: My DB Subnet Group
+      SubnetIds: 
+        - !Ref Subnet1
+        - !Ref Subnet2
+      DBSubnetGroupName: !Ref SubnetGroupName
+
+  MyDBInstance:
+    Type: AWS::RDS::DBInstance
+    Properties:
+      DBInstanceIdentifier: mydbinstance
+      DBInstanceClass: !Ref DBInstanceClass
+      Engine: mysql
+      EngineVersion: '8.0'
+      MasterUsername: !Ref DBUsername
+      MasterUserPassword: !Ref DBPassword
+      DBName: !Ref DBName
+      AllocatedStorage: '20'
+      StorageType: gp2
+      VPCSecurityGroups: 
+        - !GetAtt MyDBSecurityGroup.GroupId
+      DBSubnetGroupName: !Ref MyDBSubnetGroup
+      MultiAZ: false
+      BackupRetentionPeriod: 7
+
+  MyDBSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Enable MySQL access
+      VpcId: !Ref VPCID
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '3306'
+          ToPort: '3306'
+          CidrIp: 0.0.0.0/0 
+
+Outputs:
+  DBInstanceEndpoint:
+    Description: "The connection endpoint for the RDS instance"
+    Value: !GetAtt MyDBInstance.Endpoint.Address
+    Export:
+      Name: !Sub "${AWS::StackName}-DBInstanceEndpoint"
+
+  DBInstanceIdentifier:
+    Description: "The identifier for the RDS instance"
+    Value: !Ref MyDBInstance
+    Export:
+      Name: !Sub "${AWS::StackName}-DBInstanceIdentifier"

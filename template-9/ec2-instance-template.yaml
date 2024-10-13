@@ -1,0 +1,36 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: EC2 Instance Stack Template
+
+Parameters:
+  VpcStack:
+    Type: AWS::CloudFormation::Stack
+    Description: Reference to the VPC Stack
+    Properties:
+      TemplateURL: https://my-cloudformation-templates-19.s3.ap-south-1.amazonaws.com/vpc-template.yaml
+
+Resources:
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0d1622042e957c247  
+      KeyName: Tea                    
+      SubnetId: !GetAtt VpcStack.Outputs.PublicSubnetId
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH access
+      VpcId: !GetAtt VpcStack.Outputs.VpcId
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0  
+
+Outputs:
+  EC2InstanceId:
+    Value: !Ref MyEC2Instance
+    Description: The ID of the EC2 instance

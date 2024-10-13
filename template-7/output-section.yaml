@@ -1,0 +1,37 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: Template to deploy an EC2 instance and an S3 bucket with Outputs
+
+Resources:
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-example-bucket
+
+  MyEC2Instance:
+    Type: AWS::EC2::Instance
+    Properties:
+      InstanceType: t2.micro
+      ImageId: ami-0d1622042e957c247  
+      KeyName: Tea                    
+      SecurityGroupIds:
+        - !Ref InstanceSecurityGroup
+
+  InstanceSecurityGroup:
+    Type: AWS::EC2::SecurityGroup
+    Properties:
+      GroupDescription: Allow SSH access
+      VpcId: !Ref MyVPC                 
+      SecurityGroupIngress:
+        - IpProtocol: tcp
+          FromPort: '22'
+          ToPort: '22'
+          CidrIp: 0.0.0.0/0             
+
+Outputs:
+  S3BucketARN:
+    Value: !GetAtt MyS3Bucket.Arn
+    Description: The ARN of the S3 bucket
+
+  EC2PublicIP:
+    Value: !GetAtt MyEC2Instance.PublicIp
+    Description: The public IP address of the EC2 instance

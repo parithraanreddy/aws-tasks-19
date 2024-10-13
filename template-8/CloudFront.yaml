@@ -1,0 +1,47 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: CloudFormation template to create a CloudFront distribution with an S3 bucket as the origin
+
+Resources:
+  MyS3Bucket:
+    Type: AWS::S3::Bucket
+    Properties:
+      BucketName: my-public-s3-bucket
+      AccessControl: PublicRead  
+
+  MyCloudFrontDistribution:
+    Type: AWS::CloudFront::Distribution
+    Properties:
+      DistributionConfig:
+        Origins:
+          - Id: S3Origin
+            DomainName: !GetAtt MyS3Bucket.DomainName
+            S3OriginConfig:
+              OriginAccessIdentity: ""  
+        Enabled: true
+        DefaultCacheBehavior:
+          TargetOriginId: S3Origin
+          ViewerProtocolPolicy: allow-all
+          AllowedMethods:
+            - GET
+            - HEAD
+          CachedMethods:
+            - GET
+            - HEAD
+          ForwardedValues:
+            QueryString: false
+            Cookies:
+              Forward: none
+          MinTTL: 0
+          DefaultTTL: 86400
+          MaxTTL: 31536000
+        ViewerCertificate:
+          CloudFrontDefaultCertificate: true  
+
+Outputs:
+  CloudFrontDistributionDomainName:
+    Value: !GetAtt MyCloudFrontDistribution.DomainName
+    Description: The domain name of the CloudFront distribution
+
+  S3BucketName:
+    Value: !Ref MyS3Bucket
+    Description: The name of the S3 bucket
